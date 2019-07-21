@@ -136,6 +136,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Engine\Graphics\Cubemap.cpp" />
     <ClCompile Include="Engine\Graphics\Camera.cpp" />
     <ClCompile Include="Engine\Graphics\Color.cpp" />
     <ClCompile Include="Engine\Graphics\Shader.cpp" />
@@ -145,6 +146,7 @@
     <ClCompile Include="Engine\Graphics\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Engine\Graphics\Cubemap.h" />
     <ClInclude Include="Engine\Graphics\Camera.h" />
     <ClInclude Include="Engine\Graphics\Color.h" />
     <ClInclude Include="Engine\Graphics\Shader.h" />

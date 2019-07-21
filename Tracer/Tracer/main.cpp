@@ -5,8 +5,10 @@
 #include "Engine/Graphics/Camera.h"
 #include "Engine/Timer.h"
 #include "Engine/Graphics/Framebuffer.h"
+#include "Engine/Graphics/Cubemap.h"
 
 int main() {
+	srand(time(0));
 	sf::ContextSettings settings;
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
@@ -57,6 +59,9 @@ int main() {
 	marcher::Framebuffer accumulationBuffer = marcher::Framebuffer({ window.getSize().x, window.getSize().y });
 	accumulationBuffer.AddTexture(GL_COLOR_ATTACHMENT0);
 
+	marcher::Cubemap map;
+	map.Create({"00/px.png", "00/nx.png", "00/py.png", "00/ny.png", "00/pz.png", "00/nz.png", });
+
 	glm::vec3 cameraRot = glm::vec3();
 	marcher::Camera camera = marcher::Camera(glm::vec3(0, 4, 4), glm::vec3(0, 0, 0));
 
@@ -98,7 +103,8 @@ int main() {
 		TotalFrames++;
 		float currentTime = frameTimer.CurrentTime<float>();
 		if (currentTime >= 1.f) {
-			printf("%f FPS | %f MS \n", (float)TotalFrames / currentTime, (currentTime / (float)TotalFrames) * 1000);
+			printf("%f FPS | %f MS | %i Samples \n", (float)TotalFrames / currentTime, (currentTime / (float)TotalFrames) * 1000, currentSample);
+
 			frameTimer.Restart();
 			TotalFrames = 0;
 		}
@@ -164,8 +170,14 @@ int main() {
 		mainShader->SendUniform("ScreenSize", glm::vec2(window.getSize().x, window.getSize().y));
 		mainShader->SendUniform("Time", totalTime);
 		mainShader->SendUniform("uSeed", static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-		mainShader->SendUniform("AccumulationTexture", 0);
-		accumulationBuffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind();
+		
+
+		map.Bind(0);
+		mainShader->SendUniform("EnviromentTexture", 0);
+
+		mainShader->SendUniform("AccumulationTexture", 1);
+		accumulationBuffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind(1);
+
 		mainShader->SendUniform("Changed", (int)changed);
 		if (changed) {
 			currentSample = 0;
@@ -178,7 +190,7 @@ int main() {
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
-
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 		accumulationBuffer.Bind();
 		accumulationBuffer.Viewport();
 		accumulationBuffer.Clear();
@@ -187,7 +199,7 @@ int main() {
 
 		accumulationShader->SendUniform("newTexture", 0);
 		
-		buffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind();
+		buffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind(0);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -198,8 +210,9 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		screenShader->Bind();
 		screenShader->SendUniform("screenTexture", 0);
-		accumulationBuffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind();
-		
+		accumulationBuffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind(0);
+		screenShader->SendUniform("ScreenSize", glm::vec2(window.getSize().x, window.getSize().y));
+
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		window.display();
