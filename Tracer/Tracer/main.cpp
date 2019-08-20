@@ -7,6 +7,8 @@
 #include "Engine/Graphics/Framebuffer.h"
 #include "Engine/Graphics/Cubemap.h"
 
+const bool Accumulate = false;
+
 int main() {
 	srand(time(0));
 	sf::ContextSettings settings;
@@ -160,10 +162,13 @@ int main() {
 
 		camera.Target = camera.Position + camDir;
 
-		glBindTexture(GL_TEXTURE_2D, 0);
-		buffer.Bind();
-		buffer.Viewport();
-		buffer.Clear();
+		if (Accumulate) {
+			glBindTexture(GL_TEXTURE_2D, 0);
+			buffer.Bind();
+			buffer.Viewport();
+			buffer.Clear();
+		}
+		else glClear(GL_COLOR_BUFFER_BIT);
 
 		mainShader->Bind();
 		camera.Update(mainShader, (float)window.getSize().x / (float)window.getSize().y, glm::vec4(0, 0, window.getSize().x, window.getSize().y));
@@ -174,7 +179,7 @@ int main() {
 
 		map.Bind(0);
 		mainShader->SendUniform("EnviromentTexture", 0);
-
+		mainShader->SendUniform("Accumulate", (int)Accumulate);
 		mainShader->SendUniform("AccumulationTexture", 1);
 		accumulationBuffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind(1);
 
@@ -191,29 +196,31 @@ int main() {
 
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-		accumulationBuffer.Bind();
-		accumulationBuffer.Viewport();
-		accumulationBuffer.Clear();
+		if (Accumulate) {
+			accumulationBuffer.Bind();
+			accumulationBuffer.Viewport();
+			accumulationBuffer.Clear();
 
-		accumulationShader->Bind();
+			accumulationShader->Bind();
 
-		accumulationShader->SendUniform("newTexture", 0);
-		
-		buffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind(0);
+			accumulationShader->SendUniform("newTexture", 0);
 
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+			buffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind(0);
+
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
-		glBindTexture(GL_TEXTURE_2D, 0);
-		accumulationBuffer.UnBind();
-		glViewport(0, 0, window.getSize().x, window.getSize().y);
-		glClear(GL_COLOR_BUFFER_BIT);
-		screenShader->Bind();
-		screenShader->SendUniform("screenTexture", 0);
-		accumulationBuffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind(0);
-		screenShader->SendUniform("ScreenSize", glm::vec2(window.getSize().x, window.getSize().y));
+			glBindTexture(GL_TEXTURE_2D, 0);
+			accumulationBuffer.UnBind();
+			glViewport(0, 0, window.getSize().x, window.getSize().y);
+			glClear(GL_COLOR_BUFFER_BIT);
+			screenShader->Bind();
+			screenShader->SendUniform("screenTexture", 0);
+			accumulationBuffer.GetTexture(GL_COLOR_ATTACHMENT0).Bind(0);
+			screenShader->SendUniform("ScreenSize", glm::vec2(window.getSize().x, window.getSize().y));
 
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
 
 		window.display();
 	}

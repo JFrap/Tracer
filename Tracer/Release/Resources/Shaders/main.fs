@@ -56,7 +56,7 @@ Material materials[NUM_MATERIALS];
 #define NUM_SPHERES 5
 Sphere spheres[NUM_SPHERES];
 
-#define NUM_PLANES 1
+#define NUM_PLANES 6
 Plane planes[NUM_PLANES];
 
 float hash1() {
@@ -204,6 +204,8 @@ vec3 GetBackground(vec3 dir) {
     //return mix(vec3(0.2, 0.8, 1), vec3(200), clamp(pow(dot(dir, normalize(vec3(0.5,1,0.5))), 500), 0, 1));
 }
 
+const bool DirectLight = true;
+
 vec3 Shade(inout Ray ray, in TraceResult result) {
     if (result.Result.Hit) {
         int matid = 0;
@@ -223,21 +225,21 @@ vec3 Shade(inout Ray ray, in TraceResult result) {
         HitResult hit = result.Result;
         
         if (roulette < specChance) {
-            ray.Origin = hit.Position + hit.Normal * 0.001f;
+            ray.Origin = hit.Position + hit.Normal * EPSILON;
             float alpha = SmoothnessToPhongAlpha(mat.Smoothness);
             ray.Direction = randomHemisphereDirection(reflect(ray.Direction, hit.Normal), alpha);
             float f = (alpha + 2) / (alpha + 1);
             ray.Energy *= (1.0f / specChance) * mat.Specular * sdot(hit.Normal, ray.Direction, f);
         }
         else if (diffChance > 0 && roulette < specChance + diffChance) {
-            ray.Origin = hit.Position + hit.Normal * 0.001f;
+            ray.Origin = hit.Position + hit.Normal * EPSILON;
             ray.Direction = randomHemisphereDirection(hit.Normal, 1.0f);
             ray.Energy *= (1.0f / diffChance) * mat.Albedo; 
         }
         else {
             ray.Energy = vec3(0.0f);
         }
-
+        
         return mat.Emission;
     }
 
@@ -246,35 +248,28 @@ vec3 Shade(inout Ray ray, in TraceResult result) {
 }
 
 vec3 Render(in Ray ray) {
-    TraceResult info = TraceLight(ray);
-
-    if (info.Result.Hit) {
-        
-
-        vec3 finalCol = vec3(0);
-        for (int i = 0; i < BOUNCES; i++) {
-            vec3 OldEnergy = ray.Energy;
-            finalCol += OldEnergy * Shade(ray, info);
-            if (ray.Energy == vec3(0)) {
-                break;
-            }
-            info = TraceLight(ray);
+    vec3 finalCol = vec3(0);
+    for (int i = 0; i < BOUNCES; i++) {
+        TraceResult info = TraceLight(ray);
+        vec3 OldEnergy = ray.Energy;
+        finalCol += OldEnergy * Shade(ray, info);
+        if (ray.Energy == vec3(0)) {
+            break;
         }
-        
-        return finalCol;
     }
-    return GetBackground(ray.Direction);
+    
+    return finalCol;
 }
 
 void main() {
     vec2 p = -1.0 + 2.0 * (gl_FragCoord.xy) / ScreenSize.xy;
     p.x *= ScreenSize.x/ScreenSize.y;
 
-    Seed = p.x + p.y * 3.43121412313 + fract(1.12345314312*Time*uSeed);
+    Seed = p.x + p.y * 3.43121412313 + fract(1.12345314312)*CurrentSample;
     
-    materials[0] = Material(vec3(1), vec3(0), 0, vec3(40)); //Light
+    materials[0] = Material(vec3(1), vec3(0), 0, vec3(50)); //Light
 
-    materials[1] = Material(vec3(.8), vec3(.4), .3, vec3(0)); //Sphere material
+    materials[1] = Material(vec3(.8), vec3(.8), .8, vec3(0)); //Sphere material
     materials[2] = Material(vec3(1), vec3(.2), .2, vec3(0)); //Cornell White
     materials[3] = Material(vec3(1,.2,.2), vec3(.2), .2, vec3(0)); //Cornell Red
     materials[4] = Material(vec3(.2,1,.2), vec3(.2), .2, vec3(0)); //Cornell Green
@@ -288,18 +283,18 @@ void main() {
     spheres[4] = Sphere(vec3(2, 1, -2), 1, 1);
     
     planes[0] = Plane(vec3(0), vec3(0,1,0), 2);
-    // planes[1] = Plane(vec3(0, 12, 0), vec3(0,-1,0), 2);
-    // planes[2] = Plane(vec3(6, 0, 0), vec3(-1,0,0), 2);
-    // planes[3] = Plane(vec3(-6, 0, 0), vec3(1,0,0), 2);
-    // planes[4] = Plane(vec3(0, 0, 6), vec3(0,0,-1), 3);
-    // planes[5] = Plane(vec3(0, 0, -6), vec3(0,0,1), 4);
+    planes[1] = Plane(vec3(0, 12, 0), vec3(0,-1,0), 2);
+    planes[2] = Plane(vec3(6, 0, 0), vec3(-1,0,0), 2);
+    planes[3] = Plane(vec3(-6, 0, 0), vec3(1,0,0), 2);
+    planes[4] = Plane(vec3(0, 0, 6), vec3(0,0,-1), 3);
+    planes[5] = Plane(vec3(0, 0, -6), vec3(0,0,1), 4);
     
     Ray CamRay = CalculateFragRay();
 
     vec3 FinalColor = vec3(0);
     for (int i = 0; i < SAMPLES; i++) {
-        Seed += 1;
         FinalColor += Render(CamRay);
+        Seed += 1;
     }
     FinalColor *= vec3(1.f/SAMPLES);
 
