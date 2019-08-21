@@ -121,7 +121,7 @@ float energy(vec3 color) {
     return dot(color, vec3(1.0f / 3.0f));
 }
 
-float sdot(vec3 x, vec3 y, float f = 1.0f) {
+float sdot(vec3 x, vec3 y, float f) {
     return clamp(dot(x, y) * f, 0, 1);
 }
 
@@ -267,25 +267,25 @@ void main() {
 
     Seed = p.x + p.y * 3.43121412313 + fract(1.12345314312)*CurrentSample;
     
-    materials[0] = Material(vec3(1), vec3(0), 0, vec3(50)); //Light
+    materials[0] = Material(vec3(1), vec3(0), 0, vec3(1)); //Light
 
-    materials[1] = Material(vec3(.8), vec3(.8), .8, vec3(0)); //Sphere material
-    materials[2] = Material(vec3(1), vec3(.2), .2, vec3(0)); //Cornell White
+    materials[1] = Material(vec3(.8), vec3(.2), .2, vec3(0)); //Sphere material
+    materials[2] = Material(vec3(1), vec3(1), 1.5, vec3(0)); //Cornell White
     materials[3] = Material(vec3(1,.2,.2), vec3(.2), .2, vec3(0)); //Cornell Red
     materials[4] = Material(vec3(.2,1,.2), vec3(.2), .2, vec3(0)); //Cornell Green
 
 
-    spheres[0] = Sphere(vec3(0, 6, 0), .5, 0);
+    spheres[0] = Sphere(vec3(0, 1, 0), .5, 1);
     
-    spheres[1] = Sphere(vec3(2, 1, 2), 1, 1);
-    spheres[2] = Sphere(vec3(-2, 1, 2), 1, 1);
-    spheres[3] = Sphere(vec3(-2, 1, -2), 1, 1);
-    spheres[4] = Sphere(vec3(2, 1, -2), 1, 1);
+    spheres[1] = Sphere(vec3(2, 1, 2), 1, 2);
+    spheres[2] = Sphere(vec3(-2, 1, 2), 1, 2);
+    spheres[3] = Sphere(vec3(-2, 1, -2), 1, 2);
+    spheres[4] = Sphere(vec3(2, 1, -2), 1, 2);
     
-    planes[0] = Plane(vec3(0), vec3(0,1,0), 2);
-    planes[1] = Plane(vec3(0, 12, 0), vec3(0,-1,0), 2);
-    planes[2] = Plane(vec3(6, 0, 0), vec3(-1,0,0), 2);
-    planes[3] = Plane(vec3(-6, 0, 0), vec3(1,0,0), 2);
+    planes[0] = Plane(vec3(0), vec3(0,1,0), 1);
+    planes[1] = Plane(vec3(0, 12, 0), vec3(0,-1,0), 0);
+    planes[2] = Plane(vec3(6, 0, 0), vec3(-1,0,0), 1);
+    planes[3] = Plane(vec3(-6, 0, 0), vec3(1,0,0), 1);
     planes[4] = Plane(vec3(0, 0, 6), vec3(0,0,-1), 3);
     planes[5] = Plane(vec3(0, 0, -6), vec3(0,0,1), 4);
     

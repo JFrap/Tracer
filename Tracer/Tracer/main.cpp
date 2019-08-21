@@ -7,7 +7,7 @@
 #include "Engine/Graphics/Framebuffer.h"
 #include "Engine/Graphics/Cubemap.h"
 
-const bool Accumulate = false;
+const bool Accumulate = true;
 
 int main() {
 	srand(time(0));
@@ -188,7 +188,8 @@ int main() {
 			currentSample = 0;
 			changed = false;
 		}
-		currentSample++;
+		if (Accumulate)
+			currentSample++;
 		mainShader->SendUniform("CurrentSample", (int)currentSample);
 
 		glBindVertexArray(VAO); 
